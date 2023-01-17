@@ -1,4 +1,5 @@
 using Api.Filters;
+using Api.Middlewares;
 using Application;
 using Application.Interfaces;
 using FluentValidation;
@@ -10,6 +11,7 @@ using MediatR;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>();
 builder.Services.AddTransient<IProductRepository, ProductRepository>();
 builder.Services.AddMediatR(typeof(ApplicationEntryPoint).Assembly);
 
@@ -40,6 +42,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.MapControllers();
 

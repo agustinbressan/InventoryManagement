@@ -1,12 +1,13 @@
 using Application.Interfaces;
+using Domain.Models;
 using FluentValidation;
 using MediatR;
 
 namespace Application.Commands;
 
-public record UpdateProductCommand(Guid Id, string Description, int Stock) : IRequest<int>;
+public record UpdateProductCommand(Guid Id, string Description, int Stock) : IRequest<Product>;
 
-public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, int>
+public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Product>
 {
     private readonly IProductRepository _repository;
 
@@ -15,19 +16,17 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         _repository = repository;
     }
 
-    public async Task<int> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Product> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
-        await _repository.UpdateAsync(request.Id, request.Description, request.Stock);
-        return await _repository.SaveChangesAsync(cancellationToken);
-    }
-}
+        var existingProduct = await _repository.GetByIdAsync(request.Id);
+        if (existingProduct is null) {
+            throw new ValidationException("Product not found.");
+        }
 
-public class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
-{
-    public UpdateProductCommandValidator()
-    {
-        RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.Description).NotEmpty();
-        RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
+        existingProduct.Description = request.Description;
+        existingProduct.Stock = request.Stock;
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return existingProduct;
     }
 }

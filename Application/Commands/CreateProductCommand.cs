@@ -1,12 +1,12 @@
 using Application.Interfaces;
-using FluentValidation;
+using Domain.Models;
 using MediatR;
 
 namespace Application.Commands;
 
-public record CreateProductCommand(string Description, int Stock) : IRequest<int>;
+public record CreateProductCommand(string Description, int Stock) : IRequest<Product>;
 
-public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, int>
+public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Product>
 {
     private readonly IProductRepository _repository;
 
@@ -15,18 +15,11 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         _repository = repository;
     }
 
-    public async Task<int> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Product> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
-        await _repository.CreateAsync(request.Description, request.Stock);
-        return await _repository.SaveChangesAsync(cancellationToken);
-    }
-}
+        var createdProduct = await _repository.CreateAsync(request.Description, request.Stock);
+        await _repository.SaveChangesAsync(cancellationToken);
 
-public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
-{
-    public CreateProductCommandValidator()
-    {
-        RuleFor(x => x.Description).NotEmpty();
-        RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
+        return createdProduct;
     }
 }

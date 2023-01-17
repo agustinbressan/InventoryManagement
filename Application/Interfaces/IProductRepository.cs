@@ -6,13 +6,11 @@ public interface IProductRepository
 {
     Task<IEnumerable<Product>> GetAllAsync();
 
-    Task<Product?> GetByIdAsync(Guid id);
+    Task<Product> GetByIdAsync(Guid id);
 
-    Task CreateAsync(string description, int stock);
+    Task<Product> CreateAsync(string description, int stock);
 
-    Task UpdateAsync(Guid id, string description, int stock);
-
-    Task DeleteAsync(Guid guid);
+    void Delete(Product product);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

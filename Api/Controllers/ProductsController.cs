@@ -33,15 +33,15 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand commandRequest)
     {
-        await _mediator.Send(commandRequest);
-        return Ok();
+        var createdProduct = await _mediator.Send(commandRequest);
+        return Ok(createdProduct);
     }
 
     [HttpPut]
     public async Task<IActionResult> Update([FromBody] UpdateProductCommand commandRequest)
     {
-        await _mediator.Send(commandRequest);
-        return Ok();
+        var updatedProduct = await _mediator.Send(commandRequest);
+        return Ok(updatedProduct);
     }
 
     [HttpDelete("{id}")]

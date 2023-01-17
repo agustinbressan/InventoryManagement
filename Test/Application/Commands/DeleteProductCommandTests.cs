@@ -1,5 +1,7 @@
 using Application.Commands;
 using Application.Interfaces;
+using Domain.Models;
+using FluentValidation;
 using Moq;
 
 namespace Test.Application.Commands;
@@ -7,20 +9,21 @@ namespace Test.Application.Commands;
 public class DeleteProductCommandTests
 {
     [Fact]
-    public async void DeleteProductCommand_With_Not_Existing_Product_Id_Should_Throw_Exception()
+    public async void DeleteProductCommand_With_Non_Existing_Product_Should_Throw_ValidationException()
     {
         // Arrange
         var mockRepository = new Mock<IProductRepository>();
-        mockRepository.Setup(x => x.DeleteAsync(It.IsAny<Guid>())).ThrowsAsync(new KeyNotFoundException("Product not found mock message."));
         var queryHandler = new DeleteProductCommandHandler(mockRepository.Object);
         var mockDeleteProductId = Guid.NewGuid();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await queryHandler.Handle(new DeleteProductCommand(mockDeleteProductId), default));
+        var exception = await Assert.ThrowsAsync<ValidationException>(async () => await queryHandler.Handle(new DeleteProductCommand(mockDeleteProductId), default));
 
         // Verify the exception message
-        Assert.Equal("Product not found mock message.", exception.Message);
-        mockRepository.Verify(x => x.DeleteAsync(mockDeleteProductId), Times.Once);
+        Assert.Equal("Product not found.", exception.Message);
+        mockRepository.Verify(x => x.GetByIdAsync(mockDeleteProductId), Times.Once);
+        mockRepository.Verify(x => x.Delete(It.IsAny<Product>()), Times.Never);
+        mockRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -30,11 +33,16 @@ public class DeleteProductCommandTests
         var mockRepository = new Mock<IProductRepository>();
         var queryHandler = new DeleteProductCommandHandler(mockRepository.Object);
         var mockDeleteProductId = Guid.NewGuid();
+        var existingProduct = new Product(mockDeleteProductId, "Mock product", 1);
+        mockRepository.Setup(x => x.GetByIdAsync(mockDeleteProductId)).ReturnsAsync(existingProduct);
 
         // Act
         var result = await queryHandler.Handle(new DeleteProductCommand(mockDeleteProductId), default);
 
         // Assert
-        mockRepository.Verify(x => x.DeleteAsync(mockDeleteProductId), Times.Once);
+        mockRepository.Verify(x => x.GetByIdAsync(mockDeleteProductId), Times.Once);
+        mockRepository.Verify(x => x.Delete(existingProduct), Times.Once);
+        mockRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+
     }
 }
