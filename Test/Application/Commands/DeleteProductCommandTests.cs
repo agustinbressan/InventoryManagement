@@ -1,7 +1,7 @@
 using Application.Commands;
+using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Models;
-using FluentValidation;
 using Moq;
 
 namespace Test.Application.Commands;
@@ -9,7 +9,7 @@ namespace Test.Application.Commands;
 public class DeleteProductCommandTests
 {
     [Fact]
-    public async void DeleteProductCommand_With_Non_Existing_Product_Should_Throw_ValidationException()
+    public async void DeleteProductCommand_With_Non_Existing_Product_Should_Throw_ProductNotFoundException()
     {
         // Arrange
         var mockRepository = new Mock<IProductRepository>();
@@ -17,10 +17,10 @@ public class DeleteProductCommandTests
         var mockDeleteProductId = Guid.NewGuid();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(async () => await queryHandler.Handle(new DeleteProductCommand(mockDeleteProductId), default));
+        var exception = await Assert.ThrowsAsync<ProductNotFoundException>(async () => await queryHandler.Handle(new DeleteProductCommand(mockDeleteProductId), default));
 
         // Verify the exception message
-        Assert.Equal("Product not found.", exception.Message);
+        Assert.Equal($"Not found a Product with Id: {mockDeleteProductId}", exception.Message);
         mockRepository.Verify(x => x.GetByIdAsync(mockDeleteProductId), Times.Once);
         mockRepository.Verify(x => x.Delete(It.IsAny<Product>()), Times.Never);
         mockRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);

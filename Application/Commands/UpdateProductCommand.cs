@@ -1,6 +1,6 @@
+using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Models;
-using FluentValidation;
 using MediatR;
 
 namespace Application.Commands;
@@ -20,7 +20,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
     {
         var existingProduct = await _repository.GetByIdAsync(request.Id);
         if (existingProduct is null) {
-            throw new ValidationException("Product not found.");
+            throw new ProductNotFoundException() { Id = request.Id };
         }
 
         existingProduct.Description = request.Description;

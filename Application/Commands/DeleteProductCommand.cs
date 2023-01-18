@@ -1,5 +1,5 @@
+using Application.Exceptions;
 using Application.Interfaces;
-using FluentValidation;
 using MediatR;
 
 namespace Application.Commands;
@@ -19,7 +19,7 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand,
     {
         var existingProduct = await _repository.GetByIdAsync(request.Id);
         if (existingProduct is null) {
-            throw new ValidationException("Product not found.");
+            throw new ProductNotFoundException() { Id = request.Id };
         }
 
         _repository.Delete(existingProduct);

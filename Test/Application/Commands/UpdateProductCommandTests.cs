@@ -1,4 +1,5 @@
 using Application.Commands;
+using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Models;
 using FluentValidation;
@@ -10,7 +11,7 @@ public class UpdateProductCommandTests
 {
 
     [Fact]
-    public async void UpdateProductCommand_With_Non_Existing_Product_Should_Throw_ValidationException()
+    public async void UpdateProductCommand_With_Non_Existing_Product_Should_Throw_ProductNotFoundException()
     {
         // Arrange
         var mockRepository = new Mock<IProductRepository>();
@@ -18,10 +19,10 @@ public class UpdateProductCommandTests
         var mockProductId = Guid.NewGuid();
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(async () => await queryHandler.Handle(new UpdateProductCommand(mockProductId, "Mock description", 10), default));
+        var exception = await Assert.ThrowsAsync<ProductNotFoundException>(async () => await queryHandler.Handle(new UpdateProductCommand(mockProductId, "Mock description", 10), default));
 
         // Verify the exception message
-        Assert.Equal("Product not found.", exception.Message);
+        Assert.Equal($"Not found a Product with Id: {mockProductId}", exception.Message);
         mockRepository.Verify(x => x.GetByIdAsync(mockProductId), Times.Once);
         mockRepository.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }

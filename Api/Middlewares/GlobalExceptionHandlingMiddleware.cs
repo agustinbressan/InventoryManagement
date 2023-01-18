@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using FluentValidation;
+using Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Middlewares;
@@ -17,9 +17,9 @@ public class GlobalExceptionHandlingMiddleware : IMiddleware
         {
             await next(context);
         }
-        catch (ValidationException e)
+        catch (ProductNotFoundException e)
         {
-            await SetContextResponseAsync(context, (int)HttpStatusCode.BadRequest, "BadRequest", "Validation error", e.Message);
+            await SetContextResponseAsync(context, (int)HttpStatusCode.NotFound, "NotFound", "Product not found", e.Message);
         }
         catch (Exception e)
         {
